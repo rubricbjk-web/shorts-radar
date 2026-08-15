@@ -1,0 +1,33 @@
+name: Refresh ShortsRadar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 0 * * *' # 09:15 KST
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch YouTube data
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node scripts/fetch.mjs
+
+      - name: Commit refreshed data
+        run: |
+          git config user.name "shortsradar-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/latest.json
+          git diff --cached --quiet || git commit -m "chore: refresh ShortsRadar data"
+          git push
