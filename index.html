@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ShortsRadar — 지난 한 달 Shorts 트렌드 레이더</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+:root{--bg:#0a0b0f;--panel:#12141a;--panel2:#181b23;--line:#282d39;--text:#f5f7fb;--muted:#9299aa;--accent:#ff4d67;--accent2:#7c5cff;--good:#43d19e;--warn:#ffc857;--bad:#ff6b6b;--shadow:0 16px 50px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#090a0e 0,#10121a 48%,#0b0d12 100%);color:var(--text);font-family:Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif;min-height:100vh}.wrap{max-width:1480px;margin:auto;padding:28px}.top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:14px}.logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-weight:900;box-shadow:0 12px 30px rgba(255,77,103,.22)}h1{margin:0;font-size:26px;letter-spacing:-.04em}.sub{color:var(--muted);font-size:13px;margin-top:4px}.pill{border:1px solid var(--line);background:rgba(255,255,255,.035);padding:9px 12px;border-radius:999px;color:#c9ceda;font-size:12px}.hero{display:grid;grid-template-columns:1.45fr .85fr;gap:18px;margin-bottom:18px}.heroCard,.panel{background:rgba(18,20,26,.9);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}.heroCard{padding:26px;position:relative;overflow:hidden}.heroCard:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(124,92,255,.28),transparent 65%);right:-60px;top:-90px}.eyebrow{font-size:12px;color:#b9aefe;text-transform:uppercase;font-weight:800;letter-spacing:.12em}.heroTitle{font-size:34px;line-height:1.18;letter-spacing:-.05em;margin:10px 0 12px;max-width:760px}.heroDesc{color:var(--muted);line-height:1.65;max-width:760px}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:16px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:16px}.stat b{display:block;font-size:24px;letter-spacing:-.04em}.stat span{font-size:12px;color:var(--muted)}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}.btn,select,input{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;padding:11px 13px}.btn{cursor:pointer;font-weight:750}.btn.primary{background:linear-gradient(135deg,var(--accent),#ff765f);border:0}.btn.secondary{background:#1a1d27}.btn:hover{transform:translateY(-1px)}input{min-width:220px}.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.tab{white-space:nowrap;border:1px solid var(--line);background:#12141a;color:#b8becc;border-radius:11px;padding:10px 13px;cursor:pointer;font-weight:700}.tab.active{background:#f4f6fb;color:#111;border-color:#f4f6fb}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px}.panel{padding:16px}.cards{display:grid;gap:12px}.card{display:grid;grid-template-columns:48px 180px minmax(0,1fr) auto;gap:14px;align-items:center;background:#11141a;border:1px solid #252a34;border-radius:17px;padding:12px;transition:.18s}.card:hover{border-color:#3a4050;background:#141821}.rank{font-size:18px;font-weight:900;text-align:center}.thumb{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#222}.thumb img{width:100%;height:100%;object-fit:cover;display:block}.duration{position:absolute;right:6px;bottom:6px;background:rgba(0,0,0,.78);padding:3px 6px;border-radius:6px;font-size:11px}.ocrBadge{position:absolute;left:6px;top:6px;background:rgba(124,92,255,.9);padding:4px 7px;border-radius:7px;font-size:10px;font-weight:800}.title{font-size:15px;font-weight:850;line-height:1.4;letter-spacing:-.025em}.meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:7px}.metrics{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.metric{font-size:11px;border:1px solid var(--line);background:#181b22;padding:6px 8px;border-radius:8px}.metric.good{color:#67ddb3}.metric.hot{color:#ff8da0}.snippet{margin-top:10px;color:#c6cbd7;font-size:12px;background:#181b22;border-radius:10px;padding:8px 10px;display:none}.actions{display:grid;gap:7px;min-width:108px}.mini{border:1px solid var(--line);background:#181b22;color:#dfe3ed;border-radius:9px;padding:8px 9px;cursor:pointer;font-size:11px;font-weight:700}.sideTitle{font-weight:900;font-size:15px;margin:4px 0 12px}.pattern{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid #222731}.pattern:last-child{border-bottom:0}.pattern .word{font-weight:800}.pattern small{color:var(--muted)}.bar{height:7px;background:#20242d;border-radius:99px;overflow:hidden;margin-top:6px}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px}.empty{text-align:center;padding:70px 20px;color:var(--muted)}.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:30}.modal.open{display:flex}.modalBox{width:min(840px,100%);max-height:88vh;overflow:auto;background:#11141a;border:1px solid #303541;border-radius:22px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.6)}.modalHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.close{background:#20242c;border:0;color:white;width:34px;height:34px;border-radius:10px;cursor:pointer}.field{margin-top:16px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.field textarea{width:100%;min-height:180px;resize:vertical;background:#0d0f14;color:white;border:1px solid var(--line);border-radius:12px;padding:12px}.note{font-size:12px;color:var(--muted);line-height:1.6;background:#171a21;padding:12px;border-radius:11px}.toast{position:fixed;right:22px;bottom:22px;background:#f5f7fb;color:#111;padding:12px 15px;border-radius:12px;font-weight:800;display:none;z-index:50}.toast.show{display:block}.loading{opacity:.65;pointer-events:none}.small{font-size:11px;color:var(--muted)}
+@media(max-width:1050px){.hero,.layout{grid-template-columns:1fr}.sidebar{order:-1}.card{grid-template-columns:42px 150px minmax(0,1fr)}.actions{grid-column:2/4;display:flex;min-width:0}.mini{flex:1}}
+@media(max-width:680px){.wrap{padding:16px}.top{align-items:flex-start}.heroTitle{font-size:27px}.card{grid-template-columns:32px 118px minmax(0,1fr);gap:9px}.rank{font-size:14px}.title{font-size:13px}.metrics{display:none}.actions{grid-column:2/4}.pill{display:none}.hero{display:block}.stats{margin-top:12px}.thumb{border-radius:9px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="logo">SR</div><div><h1>ShortsRadar</h1><div class="sub">지난 한 달, 뭐가 터졌는지 원재료까지 본다</div></div></div>
+    <div class="pill" id="updated">데이터 로딩 중</div>
+  </div>
+
+  <section class="hero">
+    <div class="heroCard">
+      <div class="eyebrow">YouTube Shorts Trend Intelligence</div>
+      <div class="heroTitle">조회수보다 <b>터지는 패턴</b>을 찾는 쇼츠 레이더</div>
+      <div class="heroDesc">최근 7·14·30일 Shorts 후보를 모아 조회속도, 구독자 대비 돌파력, 제목 훅, 썸네일 문구를 한 화면에서 비교합니다. 썸네일 텍스트는 브라우저 OCR로 추출할 수 있습니다.</div>
+    </div>
+    <div class="panel stats">
+      <div class="stat"><b id="sCount">0</b><span>분석 영상</span></div>
+      <div class="stat"><b id="sViews">0</b><span>총 조회수</span></div>
+      <div class="stat"><b id="sVph">0</b><span>중앙 VPH</span></div>
+      <div class="stat"><b id="sBreak">0×</b><span>최고 구독자 돌파</span></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="tabs" id="tabs"></div>
+    <select id="sort"><option value="score">종합점수순</option><option value="views">조회수순</option><option value="vph">VPH순</option><option value="breakout">구독자 대비 돌파순</option><option value="engagement">참여율순</option></select>
+    <input id="search" placeholder="제목·채널·OCR 문구 검색" />
+    <button class="btn secondary" id="ocrTop">상위 20개 OCR</button>
+    <button class="btn secondary" id="csv">CSV 내보내기</button>
+  </div>
+
+  <div class="layout">
+    <main class="panel"><div id="cards" class="cards"></div></main>
+    <aside class="panel sidebar">
+      <div class="sideTitle">🔥 이번 달 제목 훅</div><div id="patterns"></div>
+      <div class="sideTitle" style="margin-top:24px">🧭 장르 분포</div><div id="categories"></div>
+      <div class="sideTitle" style="margin-top:24px">대본에 대해</div>
+      <div class="note">YouTube 공식 Data API로는 타 채널 영상의 실제 자막 본문을 API Key만으로 자동 다운로드할 수 없습니다. 이 사이트는 자막 존재 여부를 표시하고, 확보한 대본을 영상별로 저장·분석할 수 있게 해두었습니다.</div>
+    </aside>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="modalBox"><div class="modalHead"><div><b id="mTitle"></b><div class="small" id="mMeta"></div></div><button class="close" id="close">✕</button></div><div class="field"><label>썸네일 OCR 문구</label><div class="note" id="mOcr">아직 OCR하지 않았습니다.</div></div><div class="field"><label>대본 / 자막</label><textarea id="transcript" placeholder="확보한 대본을 붙여넣으면 이 브라우저에 저장됩니다."></textarea></div><div class="field"><label>자동 구조 분석</label><div class="note" id="analysis">대본을 입력하면 첫 문장, 질문형 훅, 반전 신호 등을 간단히 분석합니다.</div></div><div class="toolbar"><button class="btn primary" id="saveTranscript">대본 저장</button><button class="btn secondary" id="runOcrModal">썸네일 OCR 실행</button><a class="btn secondary" id="openYoutube" target="_blank" rel="noopener">YouTube 열기</a></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// 예전 미리보기용 DEMO 데이터(현재 자동 표시하지 않음)
+const DEMO=[
+ {id:'demo1',title:'아직도 이걸 이렇게 하고 있다고?',channelTitle:'생활연구소',channelSubscribers:18400,publishedAt:new Date(Date.now()-3.4*864e5).toISOString(),durationSeconds:27,captionAvailable:true,views:1840000,likes:82000,comments:2130,viewsPerHour:22549,viewsPerDay:541176,engagement:.0457,subscriberBreakout:100,score:178,category:'지식·정보',thumbnail:'https://i.ytimg.com/vi/aqz-KE-bpKQ/hqdefault.jpg',url:'https://youtube.com',thumbnailText:'',transcript:''},
+ {id:'demo2',title:'결국 들켜버린 고양이의 비밀ㅋㅋ',channelTitle:'냥냥극장',channelSubscribers:7200,publishedAt:new Date(Date.now()-7.1*864e5).toISOString(),durationSeconds:19,captionAvailable:false,views:920000,likes:61000,comments:990,viewsPerHour:5399,viewsPerDay:129577,engagement:.067,subscriberBreakout:127.8,score:166,category:'동물',thumbnail:'https://i.ytimg.com/vi/ScMzIvxBSi4/hqdefault.jpg',url:'https://youtube.com',thumbnailText:'',transcript:''},
+ {id:'demo3',title:'이 장면을 보고도 눈치를 못 챘다면',channelTitle:'1분영화',channelSubscribers:51000,publishedAt:new Date(Date.now()-12*864e5).toISOString(),durationSeconds:42,captionAvailable:true,views:3100000,likes:148000,comments:3100,viewsPerHour:10763,viewsPerDay:258333,engagement:.0487,subscriberBreakout:60.8,score:171,category:'코미디·밈',thumbnail:'https://i.ytimg.com/vi/M7lc1UVf-VE/hqdefault.jpg',url:'https://youtube.com',thumbnailText:'',transcript:''}
+];
+const titlePatterns=['절대','아직도','결국','몰랐던','모르면','알고보니','알고 보니','인 줄 알았는데','인줄 알았는데','하면 안 되는','하지 마세요','진짜 이유','충격','레전드','미쳤다','대박','처음 알았다','왜 아무도'];
+let videos=[],active='전체',selected=null;
+const $=s=>document.querySelector(s);const fmt=n=>n>=1e8?(n/1e8).toFixed(1)+'억':n>=1e4?(n/1e4).toFixed(n>=1e5?0:1)+'만':Math.round(n).toLocaleString();const pct=n=>(n*100).toFixed(1)+'%';
+function toast(t){$('#toast').textContent=t;$('#toast').classList.add('show');setTimeout(()=>$('#toast').classList.remove('show'),1800)}
+function esc(s=''){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function loadLocal(v){v.thumbnailText=localStorage.getItem('ocr:'+v.id)||v.thumbnailText||'';v.transcript=localStorage.getItem('tr:'+v.id)||v.transcript||'';return v}
+let dataState='loading';
+async function load(){
+ try{
+  if(location.protocol==='file:') throw new Error('file-protocol');
+  const r=await fetch('data/latest.json?'+Date.now());
+  if(!r.ok) throw new Error('latest-json');
+  const j=await r.json();
+  videos=(j.videos||[]).map(loadLocal);
+  if(videos.length){dataState='live';$('#updated').textContent=(j.generatedAt?'갱신 '+new Date(j.generatedAt).toLocaleString('ko-KR'):'실데이터')+' · '+videos.length+'개';}
+  else{dataState='empty';$('#updated').textContent='실데이터 미수집 · GitHub Action을 1회 실행하세요';}
+ }catch(e){
+  videos=[];dataState=location.protocol==='file:'?'local':'error';
+  $('#updated').textContent=location.protocol==='file:'?'로컬 HTML 미리보기 · 실데이터는 GitHub Pages에서 표시':'데이터 로드 실패';
+ }
+ renderAll();
+}
+function categories(){return ['전체',...new Set(videos.map(v=>v.category))]}
+function renderTabs(){const el=$('#tabs');el.innerHTML=categories().map(c=>`<button class="tab ${c===active?'active':''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');el.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{active=b.dataset.c;renderAll()})}
+function filtered(){let a=videos.filter(v=>active==='전체'||v.category===active);const q=$('#search').value.trim().toLowerCase();if(q)a=a.filter(v=>`${v.title} ${v.channelTitle} ${v.thumbnailText}`.toLowerCase().includes(q));const s=$('#sort').value;return [...a].sort((x,y)=>s==='views'?y.views-x.views:s==='vph'?y.viewsPerHour-x.viewsPerHour:s==='breakout'?y.subscriberBreakout-x.subscriberBreakout:s==='engagement'?y.engagement-x.engagement:y.score-x.score)}
+function renderCards(){const a=filtered();let empty='조건에 맞는 영상이 없습니다.';if(!videos.length){if(dataState==='local')empty='<b>현재는 로컬 HTML 미리보기입니다.</b><br><br>실제 TOP100은 GitHub에 업로드한 뒤 <b>YOUTUBE_API_KEY</b> Secret을 등록하고 <b>Actions → Refresh ShortsRadar → Run workflow</b>를 한 번 실행하면 표시됩니다.';else if(dataState==='empty')empty='<b>아직 실제 YouTube 데이터가 수집되지 않았습니다.</b><br><br>GitHub에서 <b>Actions → Refresh ShortsRadar → Run workflow</b>를 한 번 실행하세요. 완료 후 data/latest.json에 실제 영상이 저장되고 최대 100개까지 표시됩니다.';else if(dataState==='error')empty='<b>data/latest.json을 불러오지 못했습니다.</b><br><br>GitHub Pages 배포 상태와 Actions 실행 결과를 확인하세요.';}$('#cards').innerHTML=a.length?a.map((v,i)=>`<article class="card"><div class="rank">${i+1}</div><div class="thumb"><img src="${v.thumbnail}" alt=""><span class="duration">${v.durationSeconds}s</span>${v.thumbnailText?'<span class="ocrBadge">OCR</span>':''}</div><div><div class="title">${esc(v.title)}</div><div class="meta"><span>${esc(v.channelTitle)}</span><span>구독 ${fmt(v.channelSubscribers)}</span><span>${Math.max(1,Math.round((Date.now()-new Date(v.publishedAt))/864e5))}일 전</span><span>${esc(v.category)}</span>${v.captionAvailable?'<span>CC 있음</span>':''}</div><div class="metrics"><span class="metric hot">조회 ${fmt(v.views)}</span><span class="metric good">VPH ${fmt(v.viewsPerHour)}</span><span class="metric">일평균 ${fmt(v.viewsPerDay)}</span><span class="metric">구독자 대비 ${v.subscriberBreakout.toFixed(1)}×</span><span class="metric">참여 ${pct(v.engagement)}</span></div>${v.thumbnailText?`<div class="snippet" style="display:block">🖼️ ${esc(v.thumbnailText)}</div>`:''}</div><div class="actions"><button class="mini" data-open="${v.id}">분석 보기</button><button class="mini" data-ocr="${v.id}">${v.thumbnailText?'OCR 다시':'OCR'}</button><a class="mini" href="${v.url}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none">영상 ↗</a></div></article>`).join(''):`<div class="empty">${empty}</div>`;
+ document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openModal(b.dataset.open));document.querySelectorAll('[data-ocr]').forEach(b=>b.onclick=()=>runOcr(b.dataset.ocr,b));}
+function renderStats(){const a=filtered(), med=a.length?[...a].sort((x,y)=>x.viewsPerHour-y.viewsPerHour)[Math.floor(a.length/2)].viewsPerHour:0;$('#sCount').textContent=a.length;$('#sViews').textContent=fmt(a.reduce((s,v)=>s+v.views,0));$('#sVph').textContent=fmt(med);$('#sBreak').textContent=(Math.max(0,...a.map(v=>v.subscriberBreakout))).toFixed(1)+'×'}
+function renderPatterns(){const a=filtered();let rows=titlePatterns.map(p=>({p,n:a.filter(v=>v.title.includes(p)||(v.thumbnailText||'').includes(p)).length})).filter(x=>x.n).sort((a,b)=>b.n-a.n).slice(0,10);if(!rows.length)rows=[{p:'OCR 후 패턴이 더 잡힙니다',n:0}];const max=Math.max(1,...rows.map(x=>x.n));$('#patterns').innerHTML=rows.map(x=>`<div class="pattern"><div style="flex:1"><div class="word">${esc(x.p)}</div><div class="bar"><i style="width:${x.n/max*100}%"></i></div></div><small>${x.n}개</small></div>`).join('')}
+function renderCategories(){const counts={};videos.forEach(v=>counts[v.category]=(counts[v.category]||0)+1);const max=Math.max(1,...Object.values(counts));$('#categories').innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<div class="pattern"><div style="flex:1"><div class="word">${esc(k)}</div><div class="bar"><i style="width:${n/max*100}%"></i></div></div><small>${n}</small></div>`).join('')}
+function renderAll(){renderTabs();renderCards();renderStats();renderPatterns();renderCategories()}
+async function runOcr(id,btn){const v=videos.find(x=>x.id===id);if(!v)return;const old=btn?.textContent;try{if(btn){btn.textContent='OCR 중…';btn.disabled=true}const r=await Tesseract.recognize(v.thumbnail,'kor+eng',{logger:m=>{if(btn&&m.status==='recognizing text')btn.textContent=`OCR ${Math.round((m.progress||0)*100)}%`}});v.thumbnailText=(r.data.text||'').replace(/\s+/g,' ').trim();localStorage.setItem('ocr:'+v.id,v.thumbnailText);toast(v.thumbnailText?'OCR 완료':'텍스트를 찾지 못했습니다');renderAll();if(selected?.id===id)fillModal(v);}catch(e){console.error(e);toast('OCR 실패 — 썸네일 CORS 또는 네트워크 문제');}finally{if(btn){btn.textContent=old;btn.disabled=false}}}
+async function runTopOcr(){const b=$('#ocrTop');const targets=filtered().filter(v=>!v.thumbnailText).slice(0,20);if(!targets.length)return toast('OCR할 새 영상이 없습니다');b.classList.add('loading');for(let i=0;i<targets.length;i++){b.textContent=`OCR ${i+1}/${targets.length}`;await runOcr(targets[i].id)}b.textContent='상위 20개 OCR';b.classList.remove('loading')}
+function analyzeTranscript(t){t=t.trim();if(!t)return '대본을 입력하면 첫 문장, 질문형 훅, 반전 신호 등을 간단히 분석합니다.';const first=t.split(/[.!?\n]/).map(x=>x.trim()).find(Boolean)||'';const flags=[];if(/[?？]/.test(t.slice(0,120)))flags.push('질문형 훅');if(/그런데|하지만|알고보니|알고 보니|반전|결국|사실은/.test(t))flags.push('반전/전환 신호');if(/절대|무조건|아직도|충격|대박|미쳤/.test(t.slice(0,160)))flags.push('강한 감정 단어');if(/구독|좋아요|댓글|팔로우/.test(t.slice(-180)))flags.push('CTA 있음');return `첫 문장: “${first.slice(0,120)}”\n\n감지 패턴: ${flags.length?flags.join(' · '):'뚜렷한 규칙 없음'}\n\n길이: ${t.length.toLocaleString()}자`}
+function fillModal(v){$('#mTitle').textContent=v.title;$('#mMeta').textContent=`${v.channelTitle} · 조회 ${fmt(v.views)} · VPH ${fmt(v.viewsPerHour)} · ${v.captionAvailable?'자막 있음':'자막 여부 없음'}`;$('#mOcr').textContent=v.thumbnailText||'아직 OCR하지 않았습니다.';$('#transcript').value=v.transcript||'';$('#analysis').textContent=analyzeTranscript(v.transcript||'');$('#openYoutube').href=v.url}
+function openModal(id){selected=videos.find(v=>v.id===id);if(!selected)return;fillModal(selected);$('#modal').classList.add('open')}
+function closeModal(){$('#modal').classList.remove('open');selected=null}
+function saveTranscript(){if(!selected)return;selected.transcript=$('#transcript').value.trim();localStorage.setItem('tr:'+selected.id,selected.transcript);$('#analysis').textContent=analyzeTranscript(selected.transcript);toast('대본 저장 완료')}
+function csv(){const rows=[['rank','title','channel','publishedAt','views','viewsPerHour','viewsPerDay','subscriberBreakout','engagement','category','thumbnailText','captionAvailable','url'],...filtered().map((v,i)=>[i+1,v.title,v.channelTitle,v.publishedAt,v.views,Math.round(v.viewsPerHour),Math.round(v.viewsPerDay),v.subscriberBreakout.toFixed(2),v.engagement.toFixed(4),v.category,v.thumbnailText,v.captionAvailable,v.url])];const s=rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(',')).join('\n');const blob=new Blob(['\ufeff'+s],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='shortsradar.csv';a.click();URL.revokeObjectURL(a.href)}
+$('#sort').onchange=renderAll;$('#search').oninput=renderAll;$('#ocrTop').onclick=runTopOcr;$('#csv').onclick=csv;$('#close').onclick=closeModal;$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};$('#saveTranscript').onclick=saveTranscript;$('#runOcrModal').onclick=()=>selected&&runOcr(selected.id,$('#runOcrModal'));$('#transcript').oninput=e=>$('#analysis').textContent=analyzeTranscript(e.target.value);
+load();
+</script>
+</body></html>
