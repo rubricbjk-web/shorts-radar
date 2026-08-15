@@ -37,26 +37,55 @@ async function api(path, params) {
     if (v !== undefined && v !== null && v !== '') u.searchParams.set(k, String(v));
   }
   const r = await fetch(u);
-  if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  if (!r.ok) throw new Error(`${path} ${r.status} ${await r.text()}`);
   return r.json();
+}
+
+async function searchSource(label, extra, pages, publishedAfter, ids, diagnostics) {
+  let pageToken = '';
+  let sourceCount = 0;
+  for (let page = 0; page < pages; page++) {
+    const j = await api('/search', {
+      part: 'snippet',
+      type: 'video',
+      maxResults: 50,
+      order: 'viewCount',
+      publishedAfter,
+      regionCode: config.regionCode,
+      relevanceLanguage: config.regionCode === 'KR' ? 'ko' : undefined,
+      safeSearch: 'none',
+      videoDuration: 'short',
+      pageToken,
+      ...extra
+    });
+    diagnostics.searchCalls++;
+    for (const x of j.items || []) {
+      if (x.id?.videoId) {
+        ids.add(x.id.videoId);
+        sourceCount++;
+      }
+    }
+    pageToken = j.nextPageToken || '';
+    if (!pageToken) break;
+  }
+  diagnostics.sources[label] = sourceCount;
+  console.log(`[search] ${label}: ${sourceCount} rows`);
 }
 
 async function collectSearch() {
   const publishedAfter = new Date(Date.now() - config.days * 86400000).toISOString();
-  let pageToken = '';
-  const out = [];
-  for (let page = 0; page < config.candidatePages; page++) {
-    const j = await api('/search', {
-      part: 'snippet', type: 'video', maxResults: 50,
-      order: 'viewCount', publishedAfter, regionCode: config.regionCode,
-      relevanceLanguage: config.regionCode === 'KR' ? 'ko' : undefined,
-      videoDuration: 'short', pageToken
-    });
-    for (const x of j.items || []) if (x.id?.videoId) out.push(x.id.videoId);
-    pageToken = j.nextPageToken || '';
-    if (!pageToken) break;
+  const ids = new Set();
+  const diagnostics = { searchCalls: 0, sources: {} };
+
+  for (const q of config.searchQueries || []) {
+    await searchSource(`q:${q}`, { q }, config.queryPages || 1, publishedAfter, ids, diagnostics);
   }
-  return [...new Set(out)];
+  for (const topicId of config.topicIds || []) {
+    await searchSource(`topic:${topicId}`, { topicId }, config.topicPages || 1, publishedAfter, ids, diagnostics);
+  }
+
+  diagnostics.uniqueSearchCandidates = ids.size;
+  return { ids: [...ids], diagnostics };
 }
 
 async function getVideos(ids) {
@@ -83,13 +112,22 @@ async function getChannels(ids) {
   return map;
 }
 
-const ids = await collectSearch();
+const { ids, diagnostics } = await collectSearch();
+console.log(`Unique search candidates: ${ids.length}`);
 const raw = await getVideos(ids);
-const filtered = raw.filter(v => {
+diagnostics.videoDetailsReturned = raw.length;
+
+const durationEligible = raw.filter(v => {
   const sec = isoDurationToSeconds(v.contentDetails?.duration);
-  const views = +(v.statistics?.viewCount || 0);
-  return sec > 0 && sec <= config.maxDurationSeconds && views >= config.minViews;
+  return sec > 0 && sec <= config.maxDurationSeconds;
 });
+diagnostics.durationEligible = durationEligible.length;
+
+const filtered = durationEligible.filter(v => +(v.statistics?.viewCount || 0) >= config.minViews);
+diagnostics.minViewsEligible = filtered.length;
+
+console.log(`Duration <= ${config.maxDurationSeconds}s: ${durationEligible.length}`);
+console.log(`Views >= ${config.minViews}: ${filtered.length}`);
 
 const channels = await getChannels(filtered.map(v => v.snippet.channelId));
 const videos = filtered.map(v => {
@@ -102,7 +140,15 @@ const videos = filtered.map(v => {
   const viewsPerDay = viewsPerHour * 24;
   const engagement = views ? (likes + comments) / views : 0;
   const subscriberBreakout = subscribers ? views / subscribers : 0;
-  const score = Math.log10(Math.max(views,1))*20 + Math.log10(Math.max(viewsPerHour,1))*20 + Math.min(25, subscriberBreakout*3) + Math.min(15, engagement*300);
+  const text = `${s.title || ''} ${s.description || ''} ${s.channelTitle || ''}`;
+  const hasKoreanText = /[가-힣]/.test(text);
+  const channelCountry = ch?.snippet?.country || '';
+  const koreaAffinity = channelCountry === 'KR' ? 14 : hasKoreanText ? 8 : 0;
+  const score = Math.log10(Math.max(views,1))*20
+    + Math.log10(Math.max(viewsPerHour,1))*20
+    + Math.min(25, subscriberBreakout*3)
+    + Math.min(15, engagement*300)
+    + koreaAffinity;
   const thumb = s.thumbnails?.maxres?.url || s.thumbnails?.standard?.url || s.thumbnails?.high?.url || s.thumbnails?.medium?.url || '';
   return {
     id: v.id,
@@ -110,12 +156,13 @@ const videos = filtered.map(v => {
     description: s.description || '',
     channelId: s.channelId,
     channelTitle: s.channelTitle,
+    channelCountry,
     channelSubscribers: subscribers,
     publishedAt: s.publishedAt,
     durationSeconds: isoDurationToSeconds(v.contentDetails?.duration),
     captionAvailable: v.contentDetails?.caption === 'true',
     views, likes, comments, viewsPerHour, viewsPerDay, engagement, subscriberBreakout, score,
-    category: categoryOf(`${s.title} ${s.description || ''}`),
+    category: categoryOf(text),
     thumbnail: thumb,
     url: `https://www.youtube.com/shorts/${v.id}`,
     thumbnailText: '',
@@ -123,10 +170,13 @@ const videos = filtered.map(v => {
   };
 }).sort((a,b) => b.score - a.score).slice(0, config.resultLimit);
 
+diagnostics.saved = videos.length;
+
 await fs.writeFile(new URL('../data/latest.json', import.meta.url), JSON.stringify({
   generatedAt: new Date().toISOString(),
   regionCode: config.regionCode,
   days: config.days,
+  diagnostics,
   videos
 }, null, 2));
 console.log(`Saved ${videos.length} Shorts candidates.`);

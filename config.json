@@ -1,0 +1,34 @@
+{
+  "regionCode": "KR",
+  "days": 30,
+  "resultLimit": 100,
+  "maxDurationSeconds": 180,
+  "minViews": 10000,
+  "queryPages": 2,
+  "topicPages": 1,
+  "searchQueries": [
+    "shorts",
+    "쇼츠",
+    "#shorts",
+    "레전드|꿀팁|먹방|웃긴|반전"
+  ],
+  "topicIds": [
+    "/m/09kqc",
+    "/m/02wbm",
+    "/m/068hy",
+    "/m/0bzvm2",
+    "/m/06ntj",
+    "/m/01k8wb",
+    "/m/07c1v",
+    "/m/032tl",
+    "/m/041xxh",
+    "/m/07bxq",
+    "/m/027x7n",
+    "/m/02jjt"
+  ],
+  "ocrTopN": 20,
+  "titlePatterns": [
+    "절대", "아직도", "결국", "몰랐던", "모르면", "알고보니", "알고 보니", "인 줄 알았는데", "인줄 알았는데",
+    "하면 안 되는", "하지 마세요", "진짜 이유", "충격", "레전드", "미쳤다", "대박", "처음 알았다", "왜 아무도"
+  ]
+}
