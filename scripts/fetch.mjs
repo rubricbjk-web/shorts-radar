@@ -31,6 +31,11 @@ function categoryOf(text = '') {
   return rules.find(([, rx]) => rx.test(t))?.[0] || '기타';
 }
 
+function quotaLikeError(err) {
+  const s = String(err?.message || err || '');
+  return /quota|rateLimitExceeded|dailyLimitExceeded|quotaExceeded|higher quota limit/i.test(s);
+}
+
 async function api(path, params) {
   const u = new URL(base + path);
   for (const [k,v] of Object.entries({...params, key: API_KEY})) {
@@ -77,11 +82,34 @@ async function collectSearch() {
   const ids = new Set();
   const diagnostics = { searchCalls: 0, sources: {} };
 
+  diagnostics.quotaExceeded = false;
+  diagnostics.stoppedAt = '';
+
   for (const q of config.searchQueries || []) {
-    await searchSource(`q:${q}`, { q }, config.queryPages || 1, publishedAfter, ids, diagnostics);
+    try {
+      await searchSource(`q:${q}`, { q }, config.queryPages || 1, publishedAfter, ids, diagnostics);
+    } catch (err) {
+      if (!quotaLikeError(err)) throw err;
+      diagnostics.quotaExceeded = true;
+      diagnostics.stoppedAt = `q:${q}`;
+      diagnostics.quotaMessage = String(err.message || err).slice(0, 500);
+      console.warn(`Search quota exhausted at ${diagnostics.stoppedAt}. Continuing with ${ids.size} collected candidates.`);
+      break;
+    }
   }
-  for (const topicId of config.topicIds || []) {
-    await searchSource(`topic:${topicId}`, { topicId }, config.topicPages || 1, publishedAfter, ids, diagnostics);
+  if (!diagnostics.quotaExceeded) {
+    for (const topicId of config.topicIds || []) {
+      try {
+        await searchSource(`topic:${topicId}`, { topicId }, config.topicPages || 1, publishedAfter, ids, diagnostics);
+      } catch (err) {
+        if (!quotaLikeError(err)) throw err;
+        diagnostics.quotaExceeded = true;
+        diagnostics.stoppedAt = `topic:${topicId}`;
+        diagnostics.quotaMessage = String(err.message || err).slice(0, 500);
+        console.warn(`Search quota exhausted at ${diagnostics.stoppedAt}. Continuing with ${ids.size} collected candidates.`);
+        break;
+      }
+    }
   }
 
   diagnostics.uniqueSearchCandidates = ids.size;
@@ -114,6 +142,10 @@ async function getChannels(ids) {
 
 const { ids, diagnostics } = await collectSearch();
 console.log(`Unique search candidates: ${ids.length}`);
+if (!ids.length && diagnostics.quotaExceeded) {
+  console.warn('No search calls were available today. Existing data/latest.json is preserved. Try again after the daily Search Queries quota reset.');
+  process.exit(0);
+}
 const raw = await getVideos(ids);
 diagnostics.videoDetailsReturned = raw.length;
 
